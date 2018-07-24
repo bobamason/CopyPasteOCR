@@ -16,12 +16,20 @@
         android:supportsRtl="true"
         android:theme="@style/MaterialTheme">
         <activity
-            android:name=".mlkit.ChooserActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".mlkit.ChooserActivity"
+            android:label="@string/app_name">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
         
@@ -30,8 +38,6 @@
             android:label="@string/app_name"
             android:parentActivityName=".mlkit.ChooserActivity">
             <intent-filter>
-                <action android:name="android.intent.action."/>
-
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
@@ -42,8 +48,6 @@
             android:label="@string/app_name"
             android:parentActivityName=".mlkit.ChooserActivity">
             <intent-filter>
-                <action android:name="android.intent.action."/>
-
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
