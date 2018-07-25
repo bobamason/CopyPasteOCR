@@ -11,8 +11,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     };
+    private CommClient comm;
+    private AtomicBoolean connected = new AtomicBoolean(false);
 
     private static boolean isPermissionGranted(Context context, String permission) {
         if (ContextCompat.checkSelfPermission(context, permission)
@@ -45,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
+        comm = new CommClient();
         init();
     }
 
@@ -53,9 +57,24 @@ public class MainActivity extends AppCompatActivity {
         if (!allPermissionsGranted()) {
             getRuntimePermissions();
         } else {
-            findViewById(R.id.buttonTestFirebase).setOnClickListener(v -> {
+            Log.d(TAG, "initializing connection to server");
+            comm.init().thenAccept(value -> connected.set(value));
+            findViewById(R.id.buttonTest).setOnClickListener(v -> sendTestMessage());
+        }
+    }
 
-            });
+    private void sendTestMessage() {
+        if (connected.get()) {
+            Log.d(TAG, "sending test message");
+            comm.send("p:Hello World!!")
+                    .thenAccept(response -> Log.d(TAG, "server response = " + response));
+        } else {
+            Log.e(TAG, "not connected to server");
+//            Log.d(TAG, "attempting to reconnect");
+//            comm.init().thenAccept(value -> {
+//                connected.set(value);
+//                sendTestMessage();
+//            });
         }
     }
 
@@ -63,6 +82,18 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         init();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (comm != null) {
+            try {
+                comm.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private String[] getRequiredPermissions() {
