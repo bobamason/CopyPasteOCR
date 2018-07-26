@@ -1,5 +1,6 @@
 package net.masonapps.shippingdataocr;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -8,15 +9,15 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Button;
 
-import java.io.IOException;
+import net.masonapps.shippingdataocr.bluetooth.BluetoothActivity;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BluetoothActivity {
 
     private static final int PERMISSION_REQUESTS = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -29,8 +30,8 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     };
-    private CommClient comm;
-    private AtomicBoolean connected = new AtomicBoolean(false);
+    private Button testButton;
+//    private CommClient comm;
 
     private static boolean isPermissionGranted(Context context, String permission) {
         if (ContextCompat.checkSelfPermission(context, permission)
@@ -49,51 +50,67 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        comm = new CommClient();
-        init();
+//        comm = new CommClient();
+
+        testButton = findViewById(R.id.buttonTest);
+        testButton.setEnabled(false);
+        testButton.setOnClickListener(v -> {
+            if (isConnected()) {
+                Log.d(TAG, "sending test message");
+                write("p:Hello World!");
+            }
+        });
+        setup();
     }
 
-    private void init() {
+    private void setup() {
         if (!allPermissionsGranted()) {
             getRuntimePermissions();
         } else {
-            Log.d(TAG, "initializing connection to server");
-            comm.init().thenAccept(value -> connected.set(value));
-            findViewById(R.id.buttonTest).setOnClickListener(v -> sendTestMessage());
-        }
-    }
-
-    private void sendTestMessage() {
-        if (connected.get()) {
-            Log.d(TAG, "sending test message");
-            comm.send("p:Hello World!!")
-                    .thenAccept(response -> Log.d(TAG, "server response = " + response));
-        } else {
-            Log.e(TAG, "not connected to server");
-//            Log.d(TAG, "attempting to reconnect");
-//            comm.init().thenAccept(value -> {
-//                connected.set(value);
-//                sendTestMessage();
-//            });
+            if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+                displayDeviceListDialog();
+            } else {
+                requestEnableBluetooth();
+            }
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        init();
+        setup();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (comm != null) {
-            try {
-                comm.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        if (comm != null) {
+//            try {
+//                comm.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+    }
+
+    @Override
+    public void connected() {
+        testButton.setEnabled(true);
+    }
+
+    @Override
+    public void connecting() {
+
+    }
+
+    @Override
+    public void disconnected() {
+        testButton.setEnabled(false);
+    }
+
+    @Override
+    public void onRead(String line) {
+
     }
 
     private String[] getRequiredPermissions() {
