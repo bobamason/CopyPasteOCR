@@ -23,9 +23,9 @@ public class CommClient implements Closeable {
 
     public CompletableFuture<Boolean> init() {
         return CompletableFuture.supplyAsync(() -> {
-            try (Socket socket = new Socket("192.168.20.81", Constants.PORT)) {
+            try {
                 Log.d(TAG, "socket created");
-                this.socket = socket;
+                socket = new Socket("192.168.1.201", Constants.PORT);
                 reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 Log.d(TAG, "reader and writer created");
@@ -45,6 +45,7 @@ public class CommClient implements Closeable {
             try {
                 writer.write(string);
                 writer.newLine();
+                writer.flush();
                 Log.d(TAG, "string sent");
 
                 String line;
