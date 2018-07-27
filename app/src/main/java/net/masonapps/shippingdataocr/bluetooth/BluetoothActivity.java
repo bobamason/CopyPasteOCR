@@ -166,7 +166,7 @@ public abstract class BluetoothActivity extends AppCompatActivity {
         }
     }
 
-    public void attemptToConnect() {
+    public void connect() {
         if (serviceBound) {
             try {
                 btService.send(Message.obtain(null, BluetoothService.MESSAGE_CONNECT));
@@ -270,7 +270,7 @@ public abstract class BluetoothActivity extends AppCompatActivity {
             assert activity != null;
             AlertDialog.Builder builder = new AlertDialog.Builder(activity)
                     .setTitle("Select Paired Device")
-                    .setPositiveButton(android.R.string.ok, (dialog, which) -> activity.attemptToConnect());
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> activity.connect());
             final Bundle arguments = getArguments();
             if (arguments != null) {
                 builder.setSingleChoiceItems(arguments.getStringArray(DEVICE_NAMES_KEY), arguments.getInt(POSITION_KEY), (dialog, which) -> activity.setCurrentBtDevice(which));

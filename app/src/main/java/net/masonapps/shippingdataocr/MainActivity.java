@@ -11,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.Toast;
 
 import net.masonapps.shippingdataocr.bluetooth.BluetoothActivity;
 
@@ -68,7 +69,7 @@ public class MainActivity extends BluetoothActivity {
             getRuntimePermissions();
         } else {
             if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                displayDeviceListDialog();
+                connect();
             } else {
                 requestEnableBluetooth();
             }
@@ -110,7 +111,7 @@ public class MainActivity extends BluetoothActivity {
 
     @Override
     public void onRead(String line) {
-
+        Toast.makeText(this, line, Toast.LENGTH_SHORT).show();
     }
 
     private String[] getRequiredPermissions() {

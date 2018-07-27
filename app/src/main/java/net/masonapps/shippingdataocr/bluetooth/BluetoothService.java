@@ -29,7 +29,6 @@ import java.util.UUID;
  * Created by Bob on 7/21/2015.
  */
 public class BluetoothService extends Service {
-
     public static final UUID MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     public static final int MESSAGE_READ = 101;
     public static final int MESSAGE_WRITE = 102;
@@ -96,7 +95,6 @@ public class BluetoothService extends Service {
             communicationThread.cancel();
             communicationThread = null;
         }
-        if (device == null) return;
         connectThread = new ConnectThread();
         connectThread.start();
     }
@@ -203,13 +201,17 @@ public class BluetoothService extends Service {
         public ConnectThread() {
             BluetoothSocket tmpSocket = null;
             try {
-                Log.d(TAG, "device name: " + device.getName() + " address: " + device.getAddress());
-                ParcelUuid[] parcelUuids = device.getUuids();
                 UUID uuid;
-                if (parcelUuids != null && parcelUuids.length > 0) {
-                    uuid = parcelUuids[0].getUuid();
+                if (device != null) {
+                    Log.d(TAG, "device name: " + device.getName() + " address: " + device.getAddress());
+                    ParcelUuid[] parcelUuids = device.getUuids();
+                    if (parcelUuids != null && parcelUuids.length > 0) {
+                        uuid = parcelUuids[0].getUuid();
+                    } else {
+                        uuid = MODULE_UUID;
+                    }
                 } else {
-                    uuid = UUID.randomUUID();
+                    uuid = MODULE_UUID;
                 }
                 Log.d(TAG, "device uuid: " + uuid.toString());
                 tmpSocket = device.createRfcommSocketToServiceRecord(uuid);

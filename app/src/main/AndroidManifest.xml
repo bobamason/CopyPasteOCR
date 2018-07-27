@@ -58,6 +58,8 @@
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
             android:value="ocr" />
 
+        <service android:name=".bluetooth.BluetoothService"/>
+
     </application>
 
 </manifest>
