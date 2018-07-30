@@ -14,6 +14,8 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import net.masonapps.shippingdataocr.utils.Logger;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -29,7 +31,8 @@ import java.util.UUID;
  * Created by Bob on 7/21/2015.
  */
 public class BluetoothService extends Service {
-    public static final UUID MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    //    public static final UUID INSECURE_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    public static final UUID INSECURE_UUID = UUID.fromString("04c6093b-0000-1000-8000-00805f9b34fb");
     public static final int MESSAGE_READ = 101;
     public static final int MESSAGE_WRITE = 102;
     public static final int MESSAGE_STATE_CHANGE = 103;
@@ -95,8 +98,10 @@ public class BluetoothService extends Service {
             communicationThread.cancel();
             communicationThread = null;
         }
-        connectThread = new ConnectThread();
-        connectThread.start();
+        if (device != null) {
+            connectThread = new ConnectThread();
+            connectThread.start();
+        }
     }
 
     protected boolean write(String msg) {
@@ -202,21 +207,18 @@ public class BluetoothService extends Service {
             BluetoothSocket tmpSocket = null;
             try {
                 UUID uuid;
-                if (device != null) {
-                    Log.d(TAG, "device name: " + device.getName() + " address: " + device.getAddress());
+                Logger.d("device name: " + device.getName() + " address: " + device.getAddress());
                     ParcelUuid[] parcelUuids = device.getUuids();
                     if (parcelUuids != null && parcelUuids.length > 0) {
                         uuid = parcelUuids[0].getUuid();
                     } else {
-                        uuid = MODULE_UUID;
+                        uuid = INSECURE_UUID;
                     }
-                } else {
-                    uuid = MODULE_UUID;
-                }
-                Log.d(TAG, "device uuid: " + uuid.toString());
-                tmpSocket = device.createRfcommSocketToServiceRecord(uuid);
+                Logger.d("device uuid: " + uuid.toString());
+//                tmpSocket = device.createRfcommSocketToServiceRecord(uuid);
+                tmpSocket = device.createInsecureRfcommSocketToServiceRecord(INSECURE_UUID);
             } catch (IOException e) {
-                Log.e(TAG, "failed to create socket", e);
+                Logger.e("failed to create socket", e);
             }
             socket = tmpSocket;
         }
@@ -228,13 +230,13 @@ public class BluetoothService extends Service {
                 try {
                     setState(STATE_CONNECTING);
                     socket.connect();
-                    Log.d(TAG, "connecting...");
+                    Logger.d("connecting...");
                 } catch (IOException e) {
-                    Log.e(TAG, "failed to connect socket", e);
+                    Logger.e("failed to connect socket", e);
                     try {
                         socket.close();
                     } catch (IOException e1) {
-                        Log.e(TAG, "failed to close socket", e1);
+                        Logger.e("failed to close socket", e1);
                     }
                     connectionFailed();
                     return;
@@ -245,7 +247,7 @@ public class BluetoothService extends Service {
                 }
 
                 connected(socket);
-                Log.d(TAG, "connected");
+                Logger.d("connected");
                 setState(STATE_CONNECTED);
             }
         }
@@ -254,7 +256,7 @@ public class BluetoothService extends Service {
             try {
                 socket.close();
             } catch (IOException e) {
-                Log.e(TAG, "failed to close socket", e);
+                Logger.e("failed to close socket", e);
             }
         }
     }
@@ -275,7 +277,7 @@ public class BluetoothService extends Service {
                 tmpInStream = socket.getInputStream();
                 tmpOutStream = socket.getOutputStream();
             } catch (IOException e) {
-                Log.e(TAG, "failed to get streams", e);
+                Logger.e("failed to get streams", e);
             }
             if (tmpInStream == null || tmpOutStream == null) {
                 writer = null;
