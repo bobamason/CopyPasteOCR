@@ -29,14 +29,14 @@ import net.masonapps.shippingdataocr.mlkit.GraphicOverlay;
 public class TextGraphic extends GraphicOverlay.Graphic {
 
     private static final int TEXT_COLOR = Color.WHITE;
-    private static final int RECT_COLOR = 0x4405a2b4;
+    private static final int RECT_COLOR_FOCUSED = 0x4405a2b4;
+    private static final int RECT_COLOR = 0x440532b4;
     private static final float TEXT_SIZE = 48.0f;
     private static final float STROKE_WIDTH = 4.0f;
 
     private final Paint rectPaint;
     private final Paint textPaint;
     private final FirebaseVisionText.Element text;
-    private final RectF rect;
 
     TextGraphic(GraphicOverlay overlay, FirebaseVisionText.Element text) {
         super(overlay);
@@ -52,7 +52,7 @@ public class TextGraphic extends GraphicOverlay.Graphic {
         textPaint.setColor(TEXT_COLOR);
         textPaint.setTextSize(TEXT_SIZE);
         // Redraw the overlay, as this graphic has been added.
-        rect = new RectF(text.getBoundingBox());
+        setRect(text.getBoundingBox());
         postInvalidate();
     }
 
@@ -66,18 +66,21 @@ public class TextGraphic extends GraphicOverlay.Graphic {
         }
 
         // Draws the bounding box around the TextBlock.
+        final RectF rect = getRect();
         rect.left = translateX(rect.left);
         rect.top = translateY(rect.top);
         rect.right = translateX(rect.right);
         rect.bottom = translateY(rect.bottom);
+
+        if (isFocused())
+            rectPaint.setColor(RECT_COLOR_FOCUSED);
+        else
+            rectPaint.setColor(RECT_COLOR);
+        
         canvas.drawRect(rect, rectPaint);
 
         // Renders the text at the bottom of the box.
         canvas.drawText(text.getText(), rect.left + 8, rect.bottom - 8, textPaint);
-    }
-
-    public RectF getRect() {
-        return rect;
     }
 
     public FirebaseVisionText.Element getText() {

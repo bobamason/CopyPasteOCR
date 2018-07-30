@@ -15,6 +15,8 @@ package net.masonapps.shippingdataocr.mlkit;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -56,7 +58,7 @@ public class GraphicOverlay extends View {
     private int facing = CameraSource.CAMERA_FACING_BACK;
     private Set<Graphic> graphics = new HashSet<>();
     @Nullable
-    private TextGraphic currentSelection = null;
+    private Graphic currentSelection = null;
     @Nullable
     private OnTextClickedListener onTextClickedListener = null;
 
@@ -127,18 +129,28 @@ public class GraphicOverlay extends View {
     }
 
     @Override
+    public boolean performClick() {
+        if (onTextClickedListener != null && currentSelection instanceof TextGraphic) {
+            onTextClickedListener.onTextClicked(((TextGraphic) currentSelection).getText());
+            return true;
+        }
+        return super.performClick();
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                currentSelection = getSelection(event.getX(), event.getY());
-                return true;
             case MotionEvent.ACTION_MOVE:
+                currentSelection = updateSelection(event.getX(), event.getY());
                 return true;
             case MotionEvent.ACTION_UP:
                 if (currentSelection != null) {
-                    TextGraphic tmpSelection = getSelection(event.getX(), event.getY());
-                    if (tmpSelection == currentSelection && onTextClickedListener != null) {
-                        onTextClickedListener.onTextClicked(currentSelection.getText());
+                    Graphic tmpSelection = updateSelection(event.getX(), event.getY());
+                    if (tmpSelection != null) {
+                        tmpSelection.setFocused(false);
+                        if (tmpSelection == currentSelection)
+                            performClick();
                     }
                 }
                 return true;
@@ -147,13 +159,17 @@ public class GraphicOverlay extends View {
     }
 
     @Nullable
-    private TextGraphic getSelection(float x, float y) {
+    private Graphic updateSelection(float x, float y) {
+        Graphic selection = null;
         for (Graphic graphic : graphics) {
-            if (graphic instanceof TextGraphic && ((TextGraphic) graphic).getRect().contains(x, y)) {
-                return ((TextGraphic) graphic);
+            if (graphic.getRect().contains(x, y)) {
+                graphic.setFocused(true);
+                selection = graphic;
+            } else {
+                graphic.setFocused(false);
             }
         }
-        return null;
+        return selection;
     }
 
     public void setOnTextClickedListener(@Nullable OnTextClickedListener onTextClickedListener) {
@@ -171,9 +187,12 @@ public class GraphicOverlay extends View {
      */
     public abstract static class Graphic {
         private GraphicOverlay overlay;
+        private final RectF rect;
+        private boolean focused = false;
 
         public Graphic(GraphicOverlay overlay) {
             this.overlay = overlay;
+            rect = new RectF();
         }
 
         /**
@@ -232,6 +251,26 @@ public class GraphicOverlay extends View {
 
         public void postInvalidate() {
             overlay.postInvalidate();
+        }
+
+        public RectF getRect() {
+            return rect;
+        }
+
+        public void setRect(Rect rect) {
+            this.rect.set(rect);
+        }
+
+        public void setRect(RectF rect) {
+            this.rect.set(rect);
+        }
+
+        public boolean isFocused() {
+            return focused;
+        }
+
+        public void setFocused(boolean focused) {
+            this.focused = focused;
         }
     }
 }

@@ -24,12 +24,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import net.masonapps.shippingdataocr.bluetooth.BluetoothActivity;
@@ -46,17 +43,11 @@ public class MainActivity extends BluetoothActivity {
     private static final int PERMISSION_REQUESTS = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private static final String SIZE_PREVIEW = "w:max"; // Available on-screen width.
-    private static final String SIZE_1024_768 = "w:1024"; // ~1024*768 in a normal ratio
-    private static final String SIZE_640_480 = "w:640"; // ~640*480 in a normal ratio
-
     private static final String KEY_IMAGE_URI = "com.googletest.firebase.ml.demo.KEY_IMAGE_URI";
     private static final String KEY_IMAGE_MAX_WIDTH =
             "com.googletest.firebase.ml.demo.KEY_IMAGE_MAX_WIDTH";
     private static final String KEY_IMAGE_MAX_HEIGHT =
             "com.googletest.firebase.ml.demo.KEY_IMAGE_MAX_HEIGHT";
-    private static final String KEY_SELECTED_SIZE =
-            "com.googletest.firebase.ml.demo.KEY_SELECTED_SIZE";
 
     private static final int REQUEST_IMAGE_CAPTURE = 1001;
     private static final int REQUEST_CHOOSE_IMAGE = 1002;
@@ -84,7 +75,6 @@ public class MainActivity extends BluetoothActivity {
     private Button getImageButton;
     private ImageView preview;
     private GraphicOverlay graphicOverlay;
-    private String selectedSize = SIZE_PREVIEW;
     private Uri imageUri;
     // Max width (portrait mode)
     private Integer imageMaxWidth;
@@ -92,6 +82,7 @@ public class MainActivity extends BluetoothActivity {
     private Integer imageMaxHeight;
     private Bitmap bitmapForDetection;
     private VisionImageProcessor imageProcessor;
+    private MenuItem menuItemConnect = null;
 
     private static boolean isPermissionGranted(Context context, String permission) {
         if (ContextCompat.checkSelfPermission(context, permission)
@@ -150,8 +141,6 @@ public class MainActivity extends BluetoothActivity {
             }
         });
 
-        populateSizeSelector();
-
         imageProcessor = new TextRecognitionProcessor();
 
         isLandScape =
@@ -161,41 +150,11 @@ public class MainActivity extends BluetoothActivity {
             imageUri = savedInstanceState.getParcelable(KEY_IMAGE_URI);
             imageMaxWidth = savedInstanceState.getInt(KEY_IMAGE_MAX_WIDTH);
             imageMaxHeight = savedInstanceState.getInt(KEY_IMAGE_MAX_HEIGHT);
-            selectedSize = savedInstanceState.getString(KEY_SELECTED_SIZE);
 
             if (imageUri != null) {
                 tryReloadAndDetectInImage();
             }
         }
-    }
-
-    private void populateSizeSelector() {
-        Spinner sizeSpinner = findViewById(R.id.sizeSelector);
-        List<String> options = new ArrayList<>();
-        options.add(SIZE_PREVIEW);
-        options.add(SIZE_1024_768);
-        options.add(SIZE_640_480);
-
-        // Creating adapter for featureSpinner
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style, options);
-        // Drop down layout style - list view with radio button
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // attaching data adapter to spinner
-        sizeSpinner.setAdapter(dataAdapter);
-        sizeSpinner.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
-
-                    @Override
-                    public void onItemSelected(
-                            AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                        selectedSize = parentView.getItemAtPosition(pos).toString();
-                        tryReloadAndDetectInImage();
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> arg0) {
-                    }
-                });
     }
 
     @Override
@@ -209,7 +168,6 @@ public class MainActivity extends BluetoothActivity {
         if (imageMaxHeight != null) {
             outState.putInt(KEY_IMAGE_MAX_HEIGHT, imageMaxHeight);
         }
-        outState.putString(KEY_SELECTED_SIZE, selectedSize);
     }
 
     @Override
@@ -256,14 +214,23 @@ public class MainActivity extends BluetoothActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menuItemConnect = menu.findItem(R.id.item_connect);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.item_connect:
-                final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                if (bluetoothAdapter.isEnabled()) {
-                    displayDeviceListDialog();
+                if (isConnected()) {
+                    disconnect();
                 } else {
-                    requestEnableBluetooth();
+                    if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+                        displayDeviceListDialog();
+                    } else {
+                        requestEnableBluetooth();
+                    }
                 }
                 return true;
         }
@@ -272,14 +239,20 @@ public class MainActivity extends BluetoothActivity {
 
     @Override
     public void connected() {
+        if (menuItemConnect != null)
+            menuItemConnect.setIcon(R.drawable.ic_bluetooth_connected_white_24dp);
     }
 
     @Override
     public void connecting() {
+        if (menuItemConnect != null)
+            menuItemConnect.setIcon(R.drawable.ic_bluetooth_white_24dp);
     }
 
     @Override
     public void disconnected() {
+        if (menuItemConnect != null)
+            menuItemConnect.setIcon(R.drawable.ic_bluetooth_white_24dp);
     }
 
     @Override
@@ -386,25 +359,10 @@ public class MainActivity extends BluetoothActivity {
     private Pair<Integer, Integer> getTargetedWidthHeight() {
         int targetWidth;
         int targetHeight;
-
-        switch (selectedSize) {
-            case SIZE_PREVIEW:
-                int maxWidthForPortraitMode = getImageMaxWidth();
-                int maxHeightForPortraitMode = getImageMaxHeight();
-                targetWidth = isLandScape ? maxHeightForPortraitMode : maxWidthForPortraitMode;
-                targetHeight = isLandScape ? maxWidthForPortraitMode : maxHeightForPortraitMode;
-                break;
-            case SIZE_640_480:
-                targetWidth = isLandScape ? 640 : 480;
-                targetHeight = isLandScape ? 480 : 640;
-                break;
-            case SIZE_1024_768:
-                targetWidth = isLandScape ? 1024 : 768;
-                targetHeight = isLandScape ? 768 : 1024;
-                break;
-            default:
-                throw new IllegalStateException("Unknown size");
-        }
+        int maxWidthForPortraitMode = getImageMaxWidth();
+        int maxHeightForPortraitMode = getImageMaxHeight();
+        targetWidth = isLandScape ? maxHeightForPortraitMode : maxWidthForPortraitMode;
+        targetHeight = isLandScape ? maxWidthForPortraitMode : maxHeightForPortraitMode;
 
         return new Pair<>(targetWidth, targetHeight);
     }
@@ -459,9 +417,9 @@ public class MainActivity extends BluetoothActivity {
             case R.id.buttonTab:
                 if (isConnected()) write("p:\t");
                 break;
-//            case R.id.buttonEnter:
-//                if(isConnected()) write("s:enter");
-//                break;
+            case R.id.buttonEnter:
+                if (isConnected()) write("s:enter");
+                break;
         }
     }
 }

@@ -2,11 +2,20 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!--<item-->
+    <!--android:id="@+id/item_photo"-->
+    <!--android:checkable="false"-->
+    <!--android:enabled="true"-->
+    <!--android:icon="@drawable/"-->
+    <!--android:title="photo"-->
+    <!--android:visible="true"-->
+    <!--app:showAsAction="always"/>-->
+
     <item
         android:id="@+id/item_connect"
         android:checkable="false"
         android:enabled="true"
-        android:icon="@android:drawable/stat_sys_data_bluetooth"
+        android:icon="@drawable/ic_bluetooth_white_24dp"
         android:title="connect"
         android:visible="true"
         app:showAsAction="always"/>
