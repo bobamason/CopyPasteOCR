@@ -47,7 +47,7 @@
         </ImageView>
 
 
-        <net.masonapps.shippingdataocr.mlkit.GraphicOverlay
+        <net.masonapps.shippingdataocr.ui.TextOverlay
             android:id="@+id/previewOverlay"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
@@ -74,10 +74,18 @@
                 android:id="@+id/getImageButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:text="Take photo"/>
+
+            <Button
+                android:id="@+id/buttonPaste"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginStart="8dp"
+                android:onClick="onNavButtonClicked"
+                android:text="Paste"/>
 
             <Button
                 android:id="@+id/buttonRevTab"

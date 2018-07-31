@@ -3,6 +3,7 @@ package net.masonapps.shippingdataocr;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -30,9 +31,9 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import net.masonapps.shippingdataocr.bluetooth.BluetoothActivity;
-import net.masonapps.shippingdataocr.mlkit.GraphicOverlay;
 import net.masonapps.shippingdataocr.mlkit.VisionImageProcessor;
 import net.masonapps.shippingdataocr.mlkit.textrecognition.TextRecognitionProcessor;
+import net.masonapps.shippingdataocr.ui.TextOverlay;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class MainActivity extends BluetoothActivity {
     boolean isLandScape;
     private Button getImageButton;
     private ImageView preview;
-    private GraphicOverlay graphicOverlay;
+    private TextOverlay graphicOverlay;
     private Uri imageUri;
     // Max width (portrait mode)
     private Integer imageMaxWidth;
@@ -83,6 +84,7 @@ public class MainActivity extends BluetoothActivity {
     private Bitmap bitmapForDetection;
     private VisionImageProcessor imageProcessor;
     private MenuItem menuItemConnect = null;
+    private ClipboardManager clipboardManager;
 
     private static boolean isPermissionGranted(Context context, String permission) {
         if (ContextCompat.checkSelfPermission(context, permission)
@@ -99,7 +101,7 @@ public class MainActivity extends BluetoothActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar(findViewById(R.id.toolbar));
-
+        clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         if (!allPermissionsGranted()) {
             getRuntimePermissions();
         }
@@ -133,15 +135,16 @@ public class MainActivity extends BluetoothActivity {
         if (graphicOverlay == null) {
             Log.d(TAG, "graphicOverlay is null");
         }
-        graphicOverlay.setOnTextClickedListener(text -> {
-            // write the clicked text to the pc
-            Log.d(TAG, "text clicked " + text.getText() + " at " + text.getBoundingBox().toShortString());
-            if (isConnected()) {
-                write("p:" + text.getText());
-            }
-        });
+        // TODO: 7/31/2018 uncomment after changes 
+//        graphicOverlay.setOnTextClickedListener(text -> {
+//            // write the clicked text to the pc
+//            Log.d(TAG, "text clicked " + text.getText() + " at " + text.getBoundingBox().toShortString());
+//            if (isConnected()) {
+//                write("p:" + text.getText());
+//            }
+//        });
 
-        imageProcessor = new TextRecognitionProcessor();
+        imageProcessor = new TextRecognitionProcessor(this);
 
         isLandScape =
                 (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
@@ -290,7 +293,9 @@ public class MainActivity extends BluetoothActivity {
             }
 
             // Clear the overlay first
-            graphicOverlay.clear();
+            // TODO: 7/31/2018 fix 
+//            graphicOverlay.clear();
+            graphicOverlay.removeAllViews();
 
             Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
 
@@ -419,6 +424,11 @@ public class MainActivity extends BluetoothActivity {
                 break;
             case R.id.buttonEnter:
                 if (isConnected()) write("s:enter");
+                break;
+            case R.id.buttonPaste:
+                if (isConnected()) {
+                    // TODO: 7/31/2018 replace with custom selection action mode 
+                }
                 break;
         }
     }

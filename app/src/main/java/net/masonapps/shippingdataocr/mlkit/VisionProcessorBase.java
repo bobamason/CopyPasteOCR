@@ -17,11 +17,11 @@ import android.graphics.Bitmap;
 import android.media.Image;
 import android.support.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
+
+import net.masonapps.shippingdataocr.ui.TextOverlay;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -71,6 +71,16 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
         detectInVisionImage(FirebaseVisionImage.fromBitmap(bitmap), null, graphicOverlay);
     }
 
+    // Bitmap version
+    @Override
+    public void process(Bitmap bitmap, final TextOverlay
+            textOverlay) {
+        if (shouldThrottle.get()) {
+            return;
+        }
+        detectInVisionImage(FirebaseVisionImage.fromBitmap(bitmap), null, textOverlay);
+    }
+
     /**
      * Detects feature from given media.Image
      *
@@ -96,21 +106,36 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
             final GraphicOverlay graphicOverlay) {
         detectInImage(image)
                 .addOnSuccessListener(
-                        new OnSuccessListener<T>() {
-                            @Override
-                            public void onSuccess(T results) {
-                                shouldThrottle.set(false);
-                                VisionProcessorBase.this.onSuccess(results, metadata,
-                                        graphicOverlay);
-                            }
+                        results -> {
+                            shouldThrottle.set(false);
+                            VisionProcessorBase.this.onSuccess(results, metadata,
+                                    graphicOverlay);
                         })
                 .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                shouldThrottle.set(false);
-                                VisionProcessorBase.this.onFailure(e);
-                            }
+                        e -> {
+                            shouldThrottle.set(false);
+                            VisionProcessorBase.this.onFailure(e);
+                        });
+        // Begin throttling until this frame of input has been processed, either in onSuccess or
+        // onFailure.
+        shouldThrottle.set(true);
+    }
+
+    private void detectInVisionImage(
+            FirebaseVisionImage image,
+            final FrameMetadata metadata,
+            final TextOverlay textOverlay) {
+        detectInImage(image)
+                .addOnSuccessListener(
+                        results -> {
+                            shouldThrottle.set(false);
+                            VisionProcessorBase.this.onSuccess(results, metadata,
+                                    textOverlay);
+                        })
+                .addOnFailureListener(
+                        e -> {
+                            shouldThrottle.set(false);
+                            VisionProcessorBase.this.onFailure(e);
                         });
         // Begin throttling until this frame of input has been processed, either in onSuccess or
         // onFailure.
@@ -127,6 +152,11 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
             @NonNull T results,
             @NonNull FrameMetadata frameMetadata,
             @NonNull GraphicOverlay graphicOverlay);
+
+    protected abstract void onSuccess(
+            @NonNull T results,
+            @NonNull FrameMetadata frameMetadata,
+            @NonNull TextOverlay textOverlay);
 
     protected abstract void onFailure(@NonNull Exception e);
 }

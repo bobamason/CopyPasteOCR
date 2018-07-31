@@ -18,6 +18,8 @@ import android.media.Image;
 
 import com.google.firebase.ml.common.FirebaseMLException;
 
+import net.masonapps.shippingdataocr.ui.TextOverlay;
+
 import java.nio.ByteBuffer;
 
 /** An inferface to process the images with different ML Kit detectors and custom image models. */
@@ -29,6 +31,11 @@ public interface VisionImageProcessor {
 
   /** Processes the bitmap images. */
   void process(Bitmap bitmap, GraphicOverlay graphicOverlay);
+
+  /**
+   * Processes the bitmap images.
+   */
+  void process(Bitmap bitmap, TextOverlay textOverlay);
 
   /** Processes the images. */
   void process(Image bitmap, int rotation, GraphicOverlay graphicOverlay);

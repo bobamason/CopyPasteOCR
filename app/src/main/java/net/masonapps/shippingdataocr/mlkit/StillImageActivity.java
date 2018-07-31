@@ -365,13 +365,13 @@ public final class StillImageActivity extends AppCompatActivity {
 //        imageProcessor = new CloudLandmarkRecognitionProcessor();
 //        break;
       case CLOUD_TEXT_DETECTION:
-        imageProcessor = new TextRecognitionProcessor();
+        imageProcessor = new TextRecognitionProcessor(StillImageActivity.this);
         break;
 //      case CLOUD_DOCUMENT_TEXT_DETECTION:
 //        imageProcessor = new CloudDocumentTextRecognitionProcessor();
 //        break;
       default:
-        imageProcessor = new TextRecognitionProcessor();
+        imageProcessor = new TextRecognitionProcessor(StillImageActivity.this);
         break;
     }
   }

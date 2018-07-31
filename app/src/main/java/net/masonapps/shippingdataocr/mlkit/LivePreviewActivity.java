@@ -148,7 +148,7 @@ public final class LivePreviewActivity extends AppCompatActivity
 //          break;
         case TEXT_DETECTION:
           Log.i(TAG, "Using Text Detector Processor");
-          cameraSource.setMachineLearningFrameProcessor(new TextRecognitionProcessor());
+          cameraSource.setMachineLearningFrameProcessor(new TextRecognitionProcessor(LivePreviewActivity.this));
           break;
 //        case FACE_DETECTION:
 //          Log.i(TAG, "Using Face Detector Processor");
@@ -163,7 +163,7 @@ public final class LivePreviewActivity extends AppCompatActivity
 //          cameraSource.setMachineLearningFrameProcessor(new ImageLabelingProcessor());
 //          break;
         default:
-          cameraSource.setMachineLearningFrameProcessor(new TextRecognitionProcessor());
+          cameraSource.setMachineLearningFrameProcessor(new TextRecognitionProcessor(LivePreviewActivity.this));
           break;
       }
     } catch (Exception e) {
