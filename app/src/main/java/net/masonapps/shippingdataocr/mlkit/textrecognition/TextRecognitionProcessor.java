@@ -14,15 +14,8 @@
 package net.masonapps.shippingdataocr.mlkit.textrecognition;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.ml.vision.FirebaseVision;
@@ -30,7 +23,6 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextDetector;
 
-import net.masonapps.shippingdataocr.R;
 import net.masonapps.shippingdataocr.mlkit.FrameMetadata;
 import net.masonapps.shippingdataocr.mlkit.GraphicOverlay;
 import net.masonapps.shippingdataocr.mlkit.VisionProcessorBase;
@@ -90,51 +82,7 @@ public class TextRecognitionProcessor extends VisionProcessorBase<FirebaseVision
 
     @Override
     protected void onSuccess(@NonNull FirebaseVisionText results, @NonNull FrameMetadata frameMetadata, @NonNull TextOverlay textOverlay) {
-        textOverlay.removeAllViews();
-        final List<FirebaseVisionText.Block> blocks = results.getBlocks();
-        for (int i = 0; i < blocks.size(); i++) {
-            final TextView textView = createTextView(blocks.get(i));
-            final ViewGroup.LayoutParams layoutParams = createLayoutParams(blocks.get(i));
-            if (layoutParams != null)
-                textOverlay.addView(textView, layoutParams);
-        }
-    }
-
-    private TextView createTextView(FirebaseVisionText.Block block) {
-        final TextView textView = new TextView(context);
-        float textSize = context.getResources().getDimension(R.dimen.defaultTextSize);
-        StringBuilder sb = new StringBuilder();
-        final List<FirebaseVisionText.Line> lines = block.getLines();
-        for (int i = 0; i < lines.size(); i++) {
-            final List<FirebaseVisionText.Element> elements = lines.get(i).getElements();
-            for (int j = 0; j < elements.size(); j++) {
-                final FirebaseVisionText.Element element = elements.get(j);
-                if (element.getBoundingBox() != null && element.getBoundingBox().height() < textSize)
-                    textSize = element.getBoundingBox().height();
-                sb.append(element.getText());
-                if (j < elements.size() - 1)
-                    sb.append(" ");
-            }
-            if (i < lines.size() - 1)
-                sb.append("\n");
-        }
-        textView.setText(sb);
-        textView.setTextIsSelectable(true);
-        textView.setBackgroundColor(0x99FFFFFF);
-        textView.setTextColor(Color.BLACK);
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-        return textView;
-    }
-
-    @Nullable
-    private ViewGroup.LayoutParams createLayoutParams(FirebaseVisionText.Block block) {
-        final Rect boundingBox = block.getBoundingBox();
-        if (boundingBox == null) return null;
-//        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(boundingBox.width(), boundingBox.height());
-        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.topMargin = boundingBox.top;
-        layoutParams.leftMargin = boundingBox.left;
-        return layoutParams;
+        textOverlay.updateRecognitionResult(results, frameMetadata);
     }
 
     @Override
