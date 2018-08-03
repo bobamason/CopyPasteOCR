@@ -100,10 +100,10 @@ public class TextOverlay extends FrameLayout {
         final Rect boundingBox = block.getBoundingBox();
         if (boundingBox == null) return null;
         final int pad = 8;
-        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(boundingBox.width(), boundingBox.height());
-//        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.topMargin = boundingBox.top;
-        layoutParams.leftMargin = boundingBox.left;
+//        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(boundingBox.width(), boundingBox.height());
+        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.topMargin = boundingBox.top - pad;
+        layoutParams.leftMargin = boundingBox.left - pad;
         return layoutParams;
     }
 

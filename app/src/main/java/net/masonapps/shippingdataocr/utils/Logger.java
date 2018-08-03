@@ -19,7 +19,7 @@ public class Logger {
     }
 
     public static void i(String message) {
-        final StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+        final StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[3];
         String cls = stackTraceElement.getClassName();
         String method = stackTraceElement.getMethodName();
         String fileName = stackTraceElement.getFileName();
