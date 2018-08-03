@@ -19,7 +19,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,6 +33,7 @@ import net.masonapps.shippingdataocr.bluetooth.BluetoothActivity;
 import net.masonapps.shippingdataocr.mlkit.VisionImageProcessor;
 import net.masonapps.shippingdataocr.mlkit.textrecognition.TextRecognitionProcessor;
 import net.masonapps.shippingdataocr.ui.TextOverlay;
+import net.masonapps.shippingdataocr.utils.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +42,6 @@ import java.util.List;
 public class MainActivity extends BluetoothActivity {
 
     private static final int PERMISSION_REQUESTS = 1;
-    private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final String KEY_IMAGE_URI = "com.googletest.firebase.ml.demo.KEY_IMAGE_URI";
     private static final String KEY_IMAGE_MAX_WIDTH =
@@ -57,7 +56,7 @@ public class MainActivity extends BluetoothActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Log.d(TAG, "device found: " + device.getName() + ": " + device.getAddress());
+                Logger.d("device found: " + device.getName() + ": " + device.getAddress());
                 final ParcelUuid[] uuids = device.getUuids();
                 Toast.makeText(MainActivity.this, "device found: " + device.getName() + ": " + (uuids.length > 0 ? uuids[0] : "no uuid"), Toast.LENGTH_LONG).show();
                 setCurrentBtDevice(device);
@@ -89,10 +88,10 @@ public class MainActivity extends BluetoothActivity {
     private static boolean isPermissionGranted(Context context, String permission) {
         if (ContextCompat.checkSelfPermission(context, permission)
                 == PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "Permission granted: " + permission);
+            Logger.i("Permission granted: " + permission);
             return true;
         }
-        Log.i(TAG, "Permission NOT granted: " + permission);
+        Logger.i("Permission NOT granted: " + permission);
         return false;
     }
 
@@ -129,20 +128,25 @@ public class MainActivity extends BluetoothActivity {
         });
         preview = findViewById(R.id.previewImage);
         if (preview == null) {
-            Log.d(TAG, "Preview is null");
+            Logger.d("Preview is null");
         }
         graphicOverlay = findViewById(R.id.previewOverlay);
         if (graphicOverlay == null) {
-            Log.d(TAG, "graphicOverlay is null");
+            Logger.d("graphicOverlay is null");
         }
-        // TODO: 7/31/2018 uncomment after changes 
-//        graphicOverlay.setOnTextClickedListener(text -> {
-//            // write the clicked text to the pc
-//            Log.d(TAG, "text clicked " + text.getText() + " at " + text.getBoundingBox().toShortString());
-//            if (isConnected()) {
-//                write("p:" + text.getText());
-//            }
-//        });
+
+        graphicOverlay.setOnSendToPCListener(text -> {
+            // write the clicked text to the pc
+            Logger.d("sending text " + text);
+            if (isConnected()) {
+                final String[] lines = text.split("\n");
+                for (int i = 0; i < lines.length; i++) {
+                    write("p:" + lines[i]);
+                    if (i < lines.length - 1)
+                        write("s:enter");
+                }
+            }
+        });
 
         imageProcessor = new TextRecognitionProcessor(this);
 
@@ -293,8 +297,6 @@ public class MainActivity extends BluetoothActivity {
             }
 
             // Clear the overlay first
-            // TODO: 7/31/2018 fix 
-//            graphicOverlay.clear();
             graphicOverlay.removeAllViews();
 
             Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
@@ -323,7 +325,7 @@ public class MainActivity extends BluetoothActivity {
 
             imageProcessor.process(bitmapForDetection, graphicOverlay);
         } catch (IOException e) {
-            Log.e(TAG, "Error retrieving saved image");
+            Logger.e("Error retrieving saved image", e);
         }
     }
 
@@ -424,11 +426,6 @@ public class MainActivity extends BluetoothActivity {
                 break;
             case R.id.buttonEnter:
                 if (isConnected()) write("s:enter");
-                break;
-            case R.id.buttonPaste:
-                if (isConnected()) {
-                    // TODO: 7/31/2018 replace with custom selection action mode 
-                }
                 break;
         }
     }

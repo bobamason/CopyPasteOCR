@@ -74,23 +74,16 @@
                 android:id="@+id/getImageButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="Take photo"/>
-
-            <Button
-                android:id="@+id/buttonPaste"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
-                android:onClick="onNavButtonClicked"
-                android:text="Paste"/>
+                android:text="Take photo"/>
 
             <Button
                 android:id="@+id/buttonRevTab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:onClick="onNavButtonClicked"
@@ -100,6 +93,7 @@
                 android:id="@+id/buttonSpace"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:onClick="onNavButtonClicked"
@@ -110,6 +104,7 @@
                 android:id="@+id/buttonTab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:onClick="onNavButtonClicked"
@@ -120,8 +115,10 @@
                 android:id="@+id/buttonEnter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:onClick="onNavButtonClicked"
                 android:text="Enter"/>
         </LinearLayout>

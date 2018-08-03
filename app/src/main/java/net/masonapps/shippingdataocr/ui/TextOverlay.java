@@ -21,8 +21,10 @@ import com.google.firebase.ml.vision.text.FirebaseVisionText;
 
 import net.masonapps.shippingdataocr.R;
 import net.masonapps.shippingdataocr.mlkit.FrameMetadata;
+import net.masonapps.shippingdataocr.utils.Logger;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Bob Mason on 7/31/2018.
@@ -35,6 +37,8 @@ public class TextOverlay extends FrameLayout {
     private int previewHeight;
     private float heightScaleFactor = 1.0f;
     private int facing = CameraSource.CAMERA_FACING_BACK;
+    @Nullable
+    private OnSendToPCListener listener = null;
 
     public TextOverlay(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -82,10 +86,12 @@ public class TextOverlay extends FrameLayout {
         }
         textView.setText(sb);
         textView.setTextIsSelectable(true);
-        textView.setBackgroundColor(0x99FFFFFF);
+        textView.setBackgroundColor(0xa0FFFFFF);
         textView.setTextColor(Color.BLACK);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
         textView.setCustomSelectionActionModeCallback(new CustomActionModeCallback(textView));
+        final int pad = 8;
+        textView.setPadding(pad, pad, pad, pad);
         return textView;
     }
 
@@ -93,11 +99,20 @@ public class TextOverlay extends FrameLayout {
     private ViewGroup.LayoutParams createLayoutParams(FirebaseVisionText.Block block) {
         final Rect boundingBox = block.getBoundingBox();
         if (boundingBox == null) return null;
-//        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(boundingBox.width(), boundingBox.height());
-        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        final int pad = 8;
+        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(boundingBox.width(), boundingBox.height());
+//        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutParams.topMargin = boundingBox.top;
         layoutParams.leftMargin = boundingBox.left;
         return layoutParams;
+    }
+
+    public void setOnSendToPCListener(@Nullable OnSendToPCListener listener) {
+        this.listener = listener;
+    }
+
+    public interface OnSendToPCListener {
+        void onSendToPC(String text);
     }
 
     private class CustomActionModeCallback implements ActionMode.Callback {
@@ -116,27 +131,33 @@ public class TextOverlay extends FrameLayout {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
+            return true;
         }
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             final int start = textView.getSelectionStart();
             final int end = textView.getSelectionEnd();
+            Logger.d(String.format(Locale.US, "selection = [%d,%d]", start, end));
             final String text;
-            if (start >= 0 && end > start && end < textView.getText().length())
+            if (start >= 0 && end > start && end <= textView.getText().length()) {
                 text = textView.getText().subSequence(start, end).toString();
-            else
-                return false;
+            } else {
+                text = "";
+            }
+            Logger.d("selected text = " + text);
             switch (item.getItemId()) {
                 case R.id.item_web_search:
+                    Logger.d(String.format(Locale.US, "searching web: \"%s\"", text));
                     final Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
                     intent.putExtra(SearchManager.QUERY, text);
                     if (intent.resolveActivity(getContext().getPackageManager()) != null)
                         getContext().startActivity(intent);
                     return true;
-//                case R.id.item_copy:
-//                    return true;
+                case R.id.item_send_pc:
+                    if (listener != null && !text.isEmpty())
+                        listener.onSendToPC(text);
+                    return true;
             }
             return false;
         }
